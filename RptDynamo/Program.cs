@@ -57,7 +57,6 @@ namespace RptDynamo
         {
             RptEmail email = new RptEmail();
             ReportDocument rpt = new ReportDocument();
-            email.body = new StringBuilder();
 
             // Open Report
             Trace.WriteLine("Opening Report");
@@ -66,15 +65,18 @@ namespace RptDynamo
             Trace.WriteLine("Loaded Report");
 
             // Pass Parameters to Report
-            Trace.WriteLine("Passing Parameters");
-            foreach (Parameter rptParam in rptJob.report.parameter)
+            if (rptJob.report.parameter != null)
             {
-                Trace.WriteLine("Parameter: " + rptParam.Name + " is set to " + rptParam.text);
-                email.body.AppendLine("Parameter: " + rptParam.Name + " is set to " + rptParam.text);
-                rpt.SetParameterValue(rptParam.Name, rptParam.text);
+                Trace.WriteLine("Passing Parameters");
+                foreach (Parameter rptParam in rptJob.report.parameter)
+                {
+                    Trace.WriteLine("Parameter: " + rptParam.Name + " is set to " + rptParam.text);
+                    email.body.AppendLine("Parameter: " + rptParam.Name + " is set to " + rptParam.text);
+                    rpt.SetParameterValue(rptParam.Name, rptParam.text);
+                }
             }
+            else { Trace.WriteLine("No Parameters Passed"); }
 
-            // Create temporary output directory
             Trace.WriteLine("Creating temporary output directory");
             string tempdir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             Directory.CreateDirectory(tempdir);
@@ -123,11 +125,12 @@ namespace RptDynamo
         {
             Trace.WriteLine("Emailing Report");
             MailMessage mm = new MailMessage();
-            SmtpClient transport = new SmtpClient(config.smtp.server, config.smtp.port)
-            {
-                Credentials = new NetworkCredential(config.smtp.username, config.smtp.password),
-                EnableSsl = true
-            };
+
+            // Transport configuration
+            SmtpClient transport = new SmtpClient(config.smtp.server, config.smtp.port);
+            if (config.smtp.username != null & config.smtp.password != null)
+            { transport.Credentials = new NetworkCredential(config.smtp.username, config.smtp.password); }
+            transport.EnableSsl = config.smtp.ssl;
 
             mm.From = new MailAddress(config.smtp.username);
             rptJob.email.to.ForEach(delegate(String name)

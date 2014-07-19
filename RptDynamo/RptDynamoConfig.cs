@@ -14,6 +14,7 @@ namespace RptDynamo
         public string username { get; set; }
         public string password { get; set; }
         public string sender { get; set; }
+        public bool ssl { get; set; }
     }
 
     public class Queue
