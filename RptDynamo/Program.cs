@@ -60,9 +60,22 @@ namespace RptDynamo
 
             // Open Report
             Trace.WriteLine("Opening Report");
-            rpt.Load(rptJob.report.Filename);
-            email.subject = Path.GetFileNameWithoutExtension(rptJob.report.Filename);
-            Trace.WriteLine("Loaded Report");
+            try
+            {
+                rpt.Load(rptJob.report.Filename);
+                Trace.WriteLine("Loaded Report");
+            }
+            catch
+            {
+                Trace.WriteLine("Error: failure loading report");
+                email.subject = "[RptDynamo] Error " + Path.GetFileNameWithoutExtension(rptJob.report.Filename);
+                email.body.AppendLine("Error loading: " + rptJob.report.Filename);
+                email.body.AppendLine("\r\n Please contact system administrator");
+                return email;
+            }
+            
+            email.subject ="[RptDynamo] " + Path.GetFileNameWithoutExtension(rptJob.report.Filename);
+            
 
             // Pass Parameters to Report
             if (rptJob.report.parameter != null)
@@ -144,7 +157,7 @@ namespace RptDynamo
             mm.Subject = email.subject;
             mm.Body = email.body.ToString();
             mm.IsBodyHtml = true;
-            mm.Attachments.Add(new Attachment(email.file));
+            if (email.file != null) mm.Attachments.Add(new Attachment(email.file));
 
             transport.Send(mm);
 
@@ -169,7 +182,7 @@ namespace RptDynamo
             // this without using CommandLine.Text
             //  or using HelpText.AutoBuild
             var usage = new StringBuilder();
-            usage.AppendLine("Quickstart Application 1.0");
+            usage.AppendLine("RptDynamo Options");
             usage.AppendLine("Read user manual for usage instructions...");
             return usage.ToString();
         }
