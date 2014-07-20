@@ -71,6 +71,11 @@ namespace RptDynamo
                 email.subject = "[RptDynamo] Error " + Path.GetFileNameWithoutExtension(rptJob.report.Filename);
                 email.body.AppendLine("Error loading: " + rptJob.report.Filename);
                 email.body.AppendLine("\r\n Please contact system administrator");
+
+                // Clean up Crystal Reports ReportDocument
+                rpt.Close();
+                rpt.Dispose();
+
                 return email;
             }
             
@@ -125,8 +130,20 @@ namespace RptDynamo
 
             // Generate Report
             Trace.WriteLine("Exporting Report");
-            rpt.ExportToDisk(crformat, outfile);
-            email.file = outfile;
+            try {
+                rpt.Refresh();
+                rpt.ExportToDisk(crformat, outfile);
+                email.file = outfile;
+            }
+            catch (InternalException e)
+            {
+                Trace.WriteLine(e.Message);
+                email.subject = "[RptDynamo] Error " + Path.GetFileNameWithoutExtension(rptJob.report.Filename);
+                email.body.AppendLine("Error loading: " + rptJob.report.Filename);
+                email.body.AppendLine("\r\n Please contact system administrator");
+                email.body.AppendLine(e.Message);
+
+            }
 
             // Clean up Crystal Reports ReportDocument
             rpt.Close();
