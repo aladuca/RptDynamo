@@ -50,7 +50,7 @@ namespace RptDynamo
 
                 RptEmail email = ProcessRpt(job);
                 SentRpt(config, job, email);
-                
+
             }
         }
         static RptEmail ProcessRpt(RptJob rptJob)
@@ -63,6 +63,7 @@ namespace RptDynamo
             try
             {
                 rpt.Load(rptJob.report.Filename);
+                rpt.Refresh(); // Refresh data if saved
                 Trace.WriteLine("Loaded Report");
             }
             catch
@@ -78,9 +79,20 @@ namespace RptDynamo
 
                 return email;
             }
-            
-            email.subject ="[RptDynamo] " + Path.GetFileNameWithoutExtension(rptJob.report.Filename);
-            
+
+            // Set Title based on if it specified in job > report > filename
+            try { email.subject = rptJob.email.custom.subject; }
+            catch
+            {
+                if (rpt.SummaryInfo.ReportTitle != null)
+                    email.subject = "[RptDynamo] " + rpt.SummaryInfo.ReportTitle;
+                else
+                    email.subject = "[RptDynamo] " + Path.GetFileNameWithoutExtension(rptJob.report.Filename);
+            }
+
+            // Seed custom body
+            try { email.body.AppendLine(rptJob.email.custom.body + "\r\n"); }
+            catch { };
 
             // Pass Parameters to Report
             if (rptJob.report.parameter != null)
@@ -88,9 +100,16 @@ namespace RptDynamo
                 Trace.WriteLine("Passing Parameters");
                 foreach (Parameter rptParam in rptJob.report.parameter)
                 {
-                    Trace.WriteLine("Parameter: " + rptParam.Name + " is set to " + rptParam.text);
-                    email.body.AppendLine("Parameter: " + rptParam.Name + " is set to " + rptParam.text);
-                    rpt.SetParameterValue(rptParam.Name, rptParam.text);
+                    Trace.WriteLine("Parameter: " + rptParam.Name + " is set to " + rptParam.text.ToArray());
+                    rpt.SetParameterValue(rptParam.Name, rptParam.text.ToArray());
+                    string[] s = rptParam.text.ToArray();
+                    if (rptJob.email.custom == null)
+                        email.body.AppendLine("Parameter: " + rptParam.Name + " is set to " + rptParam.text);
+                    else
+                    {
+                        if (rptJob.email.custom.supressparameters)
+                            email.body.AppendLine("Parameter: " + rptParam.Name + " is set to " + rptParam.text);
+                    }
                 }
             }
             else { Trace.WriteLine("No Parameters Passed"); }
@@ -130,8 +149,8 @@ namespace RptDynamo
 
             // Generate Report
             Trace.WriteLine("Exporting Report");
-            try {
-                rpt.Refresh();
+            try
+            {
                 rpt.ExportToDisk(crformat, outfile);
                 email.file = outfile;
             }
@@ -172,7 +191,7 @@ namespace RptDynamo
                 mm.CC.Add(name);
             });
             mm.Subject = email.subject;
-            mm.Body = email.body.ToString();
+            mm.Body = email.body.Replace(Environment.NewLine, Environment.NewLine + "<br/>").ToString();
             mm.IsBodyHtml = true;
             if (email.file != null) mm.Attachments.Add(new Attachment(email.file));
 
