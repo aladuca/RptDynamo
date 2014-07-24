@@ -48,9 +48,11 @@ namespace RptDynamo
                 serializer = new DataContractJsonSerializer(typeof(RptJob));
                 RptJob job = (RptJob)serializer.ReadObject(File.OpenRead(options.job));
 
-                RptEmail email = ProcessRpt(job);
-                SentRpt(config, job, email);
-
+                if (job.email != null)
+                {
+                    RptEmail email = ProcessRpt(job);
+                    SentRpt(config, job, email);
+                }
             }
         }
         static RptEmail ProcessRpt(RptJob rptJob)
@@ -123,7 +125,7 @@ namespace RptDynamo
             // Determine File Format and Output name
             string outfile = null;
             ExportFormatType crformat = ExportFormatType.NoFormat;
-            switch (rptJob.report.output)
+            switch (rptJob.report.output.format)
             {
                 case "xlsx":
                     Trace.WriteLine("Output Format: Excel Workbook (2010+)");

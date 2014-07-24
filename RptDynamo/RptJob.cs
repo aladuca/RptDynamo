@@ -21,12 +21,20 @@ namespace RptDynamo
         public string password { get; set; }
     }
 
+    public class Output
+    {
+        public string format { get; set; }
+        public string uri { get; set; } // Reference: http://blogs.msdn.com/b/ie/archive/2006/12/06/file-uris-in-windows.aspx
+
+        // Object Store Variables
+        public string authkey { get; set; }
+    }
     public class Report
     {
         public string Filename { get; set; }
         public List<Parameter> parameter { get; set; }
         public Database database { get; set; }
-        public string output { get; set; }
+        public Output output { get; set; }
     }
 
     public class Email
