@@ -182,14 +182,26 @@ namespace RptDynamo
             transport.EnableSsl = config.smtp.ssl;
 
             mm.From = new MailAddress(config.smtp.username);
-            rptJob.email.to.ForEach(delegate(String name)
+            if (rptJob.email.to != null)
             {
-                mm.To.Add(name);
-            });
-            rptJob.email.cc.ForEach(delegate(String name)
+                rptJob.email.to.ForEach(delegate(String name)
+                {
+                    mm.To.Add(name);
+                });
+            }
+            else
             {
-                mm.CC.Add(name);
-            });
+                Trace.WriteLine("No mail \"to\" addresses specified - Email not sent");
+                return;
+            }
+            if (rptJob.email.cc != null)
+            {
+                rptJob.email.cc.ForEach(delegate(String name)
+                {
+                    mm.CC.Add(name);
+                });
+            }
+            else { Trace.WriteLine("No mail \"cc\" addresses specified"); }
             mm.Subject = email.subject;
             mm.Body = email.body.Replace(Environment.NewLine, Environment.NewLine + "<br/>").ToString();
             mm.IsBodyHtml = true;
