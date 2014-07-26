@@ -166,6 +166,25 @@ namespace RptDynamo
 
             }
 
+            // Copy Report
+            if (rptJob.report.output != null)
+            {
+                int obrac = rptJob.report.output.uri.IndexOf("{");
+                int cbrac = rptJob.report.output.uri.IndexOf("}");
+                string specvar = rptJob.report.output.uri.Substring(obrac, cbrac - obrac + 1);
+                string[] parsevar = specvar.Replace("{", "").Replace("}", "").Split(new Char[] { ':' });
+                if (parsevar[0] == "date")
+                {
+                    rptJob.report.output.uri = rptJob.report.output.uri.Replace(specvar, DateTime.Now.ToString(parsevar[1]));
+                }
+
+                Uri desturi = new Uri(rptJob.report.output.uri);
+                if (desturi.Scheme == "file" && (desturi.IsUnc || desturi.IsLoopback))
+                {
+                    File.Copy(outfile, desturi.LocalPath);
+                }
+            }
+
             // Clean up Crystal Reports ReportDocument
             rpt.Close();
             rpt.Dispose();
