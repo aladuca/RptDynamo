@@ -39,17 +39,14 @@ namespace RptDynamo
 
     public class Email
     {
-        public Custom custom { get; set; }
         public List<string> to { get; set; }
         public List<string> cc { get; set; }
-    }
-
-    public class Custom
-    {
         public string subject { get; set; }
         public string body { get; set; }
         public bool supressparameters { get; set; }
+
     }
+
     public class RptJob
     {
         public Report report { get; set; }

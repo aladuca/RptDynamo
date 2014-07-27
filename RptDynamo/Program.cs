@@ -53,6 +53,7 @@ namespace RptDynamo
                     RptEmail email = ProcessRpt(job);
                     SentRpt(config, job, email);
                 }
+                else { ProcessRpt(job); }
             }
         }
         static RptEmail ProcessRpt(RptJob rptJob)
@@ -83,7 +84,7 @@ namespace RptDynamo
             }
 
             // Set Title based on if it specified in job > report > filename
-            try { email.subject = rptJob.email.custom.subject; }
+            try { email.subject = rptJob.email.subject; }
             catch
             {
                 if (rpt.SummaryInfo.ReportTitle != null)
@@ -93,7 +94,7 @@ namespace RptDynamo
             }
 
             // Seed custom body
-            try { email.body.AppendLine(rptJob.email.custom.body + "\r\n"); }
+            try { email.body.AppendLine(rptJob.email.body + "\r\n"); }
             catch { };
 
             // Pass Parameters to Report
@@ -105,11 +106,11 @@ namespace RptDynamo
                     Trace.WriteLine("Parameter: " + rptParam.Name + " is set to " + rptParam.text.ToArray());
                     rpt.SetParameterValue(rptParam.Name, rptParam.text.ToArray());
                     string[] s = rptParam.text.ToArray();
-                    if (rptJob.email.custom == null)
+                    if (rptJob.email == null)
                         email.body.AppendLine("Parameter: " + rptParam.Name + " is set to " + rptParam.text);
                     else
                     {
-                        if (rptJob.email.custom.supressparameters)
+                        if (rptJob.email.supressparameters)
                             email.body.AppendLine("Parameter: " + rptParam.Name + " is set to " + rptParam.text);
                     }
                 }
