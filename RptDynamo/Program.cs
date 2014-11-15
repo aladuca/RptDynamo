@@ -48,12 +48,14 @@ namespace RptDynamo
                 serializer = new DataContractJsonSerializer(typeof(RptJob));
                 RptJob job = (RptJob)serializer.ReadObject(File.OpenRead(options.job));
 
-                RptEmail email = ProcessRpt(job);
-                SentRpt(config, job, email);
+                RptStatusAPI sAPI = new RptStatusAPI();
+                sAPI.processing(Guid.Parse(Path.GetFileNameWithoutExtension(options.job))).Wait(); ;
+                RptEmail email = ProcessRpt(job, sAPI);
+                SentRpt(config, job, email, sAPI);
 
             }
         }
-        static RptEmail ProcessRpt(RptJob rptJob)
+        static RptEmail ProcessRpt(RptJob rptJob, RptStatusAPI sAPI)
         {
             RptEmail email = new RptEmail();
             ReportDocument rpt = new ReportDocument();
@@ -68,6 +70,7 @@ namespace RptDynamo
             }
             catch
             {
+                sAPI.failed().Wait();
                 Trace.WriteLine("Error: failure loading report");
                 email.subject = "[RptDynamo] Error " + Path.GetFileNameWithoutExtension(rptJob.report.Filename);
                 email.body.AppendLine("Error loading: " + rptJob.report.Filename);
@@ -153,15 +156,24 @@ namespace RptDynamo
             {
                 rpt.ExportToDisk(crformat, outfile);
                 email.file = outfile;
+                sAPI.completed().Wait();
             }
             catch (InternalException e)
             {
+                sAPI.failed().Wait();
                 Trace.WriteLine(e.Message);
                 email.subject = "[RptDynamo] Error " + Path.GetFileNameWithoutExtension(rptJob.report.Filename);
                 email.body.AppendLine("Error loading: " + rptJob.report.Filename);
                 email.body.AppendLine("\r\n Please contact system administrator");
                 email.body.AppendLine(e.Message);
 
+            }
+            catch (CrystalDecisions.CrystalReports.Engine.ParameterFieldCurrentValueException e)
+            {
+                sAPI.failed().Wait();
+                email.body.AppendLine("<br/><br/><font color=\"red\"><strong>Crystal Reports Error:</strong> " + e.Message + "</font>");
+                email.body.AppendLine("\r\n Please contact system administrator");
+                email.body.AppendLine(e.Message);
             }
 
             // Clean up Crystal Reports ReportDocument
@@ -170,7 +182,7 @@ namespace RptDynamo
 
             return email;
         }
-        static void SentRpt(RptDynamoConfig config, RptJob rptJob, RptEmail email)
+        static void SentRpt(RptDynamoConfig config, RptJob rptJob, RptEmail email, RptStatusAPI sAPI)
         {
             Trace.WriteLine("Emailing Report");
             MailMessage mm = new MailMessage();
@@ -207,7 +219,7 @@ namespace RptDynamo
             mm.IsBodyHtml = true;
             if (email.file != null) mm.Attachments.Add(new Attachment(email.file));
 
-            transport.Send(mm);
+            //transport.Send(mm);
 
             mm.Dispose();
             transport.Dispose();
