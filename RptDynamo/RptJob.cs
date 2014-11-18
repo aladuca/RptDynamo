@@ -11,7 +11,7 @@ namespace RptDynamo
     {
         public string Name { get; set; }
         public string MultipleValues { get; set; }
-        public List<string> text { get; set; }
+        public List<string> SelectedValues { get; set; }
     }
 
     public class Database
@@ -24,9 +24,9 @@ namespace RptDynamo
     public class Report
     {
         public string Filename { get; set; }
-        public List<Parameter> parameter { get; set; }
+        public List<Parameter> Parameters { get; set; }
         public Database database { get; set; }
-        public string output { get; set; }
+        public string SelectedOutput { get; set; }
     }
 
     public class Email

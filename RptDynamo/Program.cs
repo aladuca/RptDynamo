@@ -98,20 +98,20 @@ namespace RptDynamo
             catch { };
 
             // Pass Parameters to Report
-            if (rptJob.report.parameter != null)
+            if (rptJob.report.Parameters != null)
             {
                 Trace.WriteLine("Passing Parameters");
-                foreach (Parameter rptParam in rptJob.report.parameter)
+                foreach (Parameter rptParam in rptJob.report.Parameters)
                 {
-                    Trace.WriteLine("Parameter: " + rptParam.Name + " is set to " + rptParam.text.ToArray());
-                    rpt.SetParameterValue(rptParam.Name, rptParam.text.ToArray());
-                    string[] s = rptParam.text.ToArray();
+                    Trace.WriteLine("Parameter: " + rptParam.Name + " is set to " + rptParam.SelectedValues.ToArray());
+                    rpt.SetParameterValue(rptParam.Name, rptParam.SelectedValues.ToArray());
+                    string[] s = rptParam.SelectedValues.ToArray();
                     if (rptJob.email.custom == null)
-                        email.body.AppendLine("Parameter: " + rptParam.Name + " is set to " + rptParam.text);
+                        email.body.AppendLine("Parameter: " + rptParam.Name + " is set to " + rptParam.SelectedValues);
                     else
                     {
                         if (rptJob.email.custom.supressparameters)
-                            email.body.AppendLine("Parameter: " + rptParam.Name + " is set to " + rptParam.text);
+                            email.body.AppendLine("Parameter: " + rptParam.Name + " is set to " + rptParam.SelectedValues);
                     }
                 }
             }
@@ -126,27 +126,32 @@ namespace RptDynamo
             // Determine File Format and Output name
             string outfile = null;
             ExportFormatType crformat = ExportFormatType.NoFormat;
-            switch (rptJob.report.output)
+            switch (rptJob.report.SelectedOutput)
             {
-                case "xlsx":
-                    Trace.WriteLine("Output Format: Excel Workbook (2010+)");
-                    outfile = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".xlsx");
-                    crformat = ExportFormatType.ExcelWorkbook;
-                    break;
-                case "xls":
+                case "4":
                     Trace.WriteLine("Output Format: Excel Workbook (pre 2010)");
                     outfile = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".xls");
                     crformat = ExportFormatType.Excel;
                     break;
-                case "pdf":
+                case "8":
+                    Trace.WriteLine("Output Format: Excel Workbook (pre 2010)");
+                    outfile = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".xls");
+                    crformat = ExportFormatType.Excel;
+                    break;
+                case "5":
                     Trace.WriteLine("Output Format: Portable Document Format");
                     outfile = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".pdf");
                     crformat = ExportFormatType.PortableDocFormat;
                     break;
-                case "csv":
+                case "10":
                     Trace.WriteLine("Output Format: Comma-Seperated Values");
                     outfile = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".csv");
                     crformat = ExportFormatType.CharacterSeparatedValues;
+                    break;
+                case "15":
+                    Trace.WriteLine("Output Format: Excel Workbook (2010+)");
+                    outfile = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".xlsx");
+                    crformat = ExportFormatType.ExcelWorkbook;
                     break;
             }
 
@@ -219,7 +224,7 @@ namespace RptDynamo
             mm.IsBodyHtml = true;
             if (email.file != null) mm.Attachments.Add(new Attachment(email.file));
 
-            //transport.Send(mm);
+            transport.Send(mm);
 
             mm.Dispose();
             transport.Dispose();
