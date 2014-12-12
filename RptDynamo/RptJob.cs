@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 namespace RptDynamo
 {
 
-    public class Parameter
+    public class Parameters
     {
         public string Name { get; set; }
-        public string MultipleValues { get; set; }
+        public bool MultipleSelect { get; set; }
         public List<string> SelectedValues { get; set; }
     }
 
@@ -24,7 +24,7 @@ namespace RptDynamo
     public class Report
     {
         public string Filename { get; set; }
-        public List<Parameter> Parameters { get; set; }
+        public List<Parameters> Parameters { get; set; }
         public Database database { get; set; }
         public string SelectedOutput { get; set; }
     }
@@ -44,6 +44,7 @@ namespace RptDynamo
     }
     public class RptJob
     {
+        public Guid JobID { get; set; }
         public Report report { get; set; }
         public Email email { get; set; }
     }

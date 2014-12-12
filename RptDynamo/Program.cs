@@ -101,7 +101,7 @@ namespace RptDynamo
             if (rptJob.report.Parameters != null)
             {
                 Trace.WriteLine("Passing Parameters");
-                foreach (Parameter rptParam in rptJob.report.Parameters)
+                foreach (Parameters rptParam in rptJob.report.Parameters)
                 {
                     Trace.WriteLine("Parameter: " + rptParam.Name + " is set to " + rptParam.SelectedValues.ToArray());
                     rpt.SetParameterValue(rptParam.Name, rptParam.SelectedValues.ToArray());
