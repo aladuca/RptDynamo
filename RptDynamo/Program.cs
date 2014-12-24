@@ -48,8 +48,8 @@ namespace RptDynamo
                 serializer = new DataContractJsonSerializer(typeof(RptJob));
                 RptJob job = (RptJob)serializer.ReadObject(File.OpenRead(options.job));
 
-                RptStatusAPI sAPI = new RptStatusAPI();
-                sAPI.processing(Guid.Parse(Path.GetFileNameWithoutExtension(options.job))).Wait(); ;
+                RptStatusAPI sAPI = new RptStatusAPI(config.apiUri);
+                sAPI.processing(Guid.Parse(Path.GetFileNameWithoutExtension(options.job))).Wait();
                 RptEmail email = ProcessRpt(job, sAPI);
                 SentRpt(config, job, email, sAPI);
 

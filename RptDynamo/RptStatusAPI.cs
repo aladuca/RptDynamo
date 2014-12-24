@@ -34,67 +34,82 @@ namespace RptDynamo
     class RptStatusAPI
     {
         private JobStatus status;
+        string apiUri = null;
 
         public RptStatusAPI() { status = new JobStatus(); }
+        public RptStatusAPI(string uri)
+        {
+            status = new JobStatus();
+            this.apiUri = uri;
+        }
 
         // Get Status Data
         public async Task processing(Guid ID)
         {
-            using (var client = new HttpClient())
+            if (!String.IsNullOrEmpty(apiUri))
             {
-                //Setup Variables for HTTP API Request
-                client.BaseAddress = new Uri("http://localhost:45732/");
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                HttpResponseMessage response;
-
-                //Get Status Data
-                response = await client.GetAsync("api/status/" + ID);
-                if (response.IsSuccessStatusCode)
+                using (var client = new HttpClient())
                 {
-                    status = await response.Content.ReadAsAsync<JobStatus>();
+                    //Setup Variables for HTTP API Request
+                    client.BaseAddress = new Uri(apiUri);
+                    client.DefaultRequestHeaders.Accept.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    HttpResponseMessage response;
+
+                    //Get Status Data
+                    response = await client.GetAsync("/status/" + ID);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        status = await response.Content.ReadAsAsync<JobStatus>();
+                    }
+
+                    status.start = DateTime.Now;
+                    status.status = Status.Processing;
+                    status.worker = GetLocalhostFqdn().ToUpper();
+                    status.processID = Process.GetCurrentProcess().Id;
+
+                    //Post Status Processing
+                    response = await client.PostAsJsonAsync("/status", status);
                 }
-
-                status.start = DateTime.Now;
-                status.status = Status.Processing;
-                status.worker = GetLocalhostFqdn().ToUpper();
-                status.processID = Process.GetCurrentProcess().Id;
-
-                //Post Status Processing
-                response = await client.PostAsJsonAsync("api/status", status);
             }
         }
         public async Task completed()
         {
-            using (var client = new HttpClient())
+            if (!String.IsNullOrEmpty(apiUri))
             {
-                //Setup Variables for HTTP API Request
-                client.BaseAddress = new Uri("http://localhost:45732/");
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                HttpResponseMessage response;
+                using (var client = new HttpClient())
+                {
+                    //Setup Variables for HTTP API Request
+                    client.BaseAddress = new Uri(apiUri);
+                    client.DefaultRequestHeaders.Accept.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    HttpResponseMessage response;
 
-                status.end = DateTime.Now;
-                status.status = Status.Completed;
-                status.processID = 0;
+                    status.end = DateTime.Now;
+                    status.status = Status.Completed;
+                    status.processID = 0;
 
-                response = await client.PostAsJsonAsync("api/status", status);
+                    response = await client.PostAsJsonAsync("/status", status);
+                }
             }
         }
         public async Task failed()
         {
-            using (var client = new HttpClient())
+            if (!String.IsNullOrEmpty(apiUri))
             {
-                //Setup Variables for HTTP API Request
-                client.BaseAddress = new Uri("http://localhost:45732/");
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                using (var client = new HttpClient())
+                {
+                    //Setup Variables for HTTP API Request
+                    client.BaseAddress = new Uri(apiUri);
+                    client.DefaultRequestHeaders.Accept.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                status.end = DateTime.Now;
-                status.status = Status.Failed;
-                status.processID = 0;
+                    status.end = DateTime.Now;
+                    status.status = Status.Failed;
+                    status.processID = 0;
 
-                HttpResponseMessage response = await client.PostAsJsonAsync("api/status", status);
+                    HttpResponseMessage response = await client.PostAsJsonAsync("/status", status);
+                }
             }
         }
 
