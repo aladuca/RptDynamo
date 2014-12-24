@@ -136,7 +136,7 @@ namespace RptDynamo
                 case "8":
                     Trace.WriteLine("Output Format: Excel Workbook (pre 2010)");
                     outfile = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".xls");
-                    crformat = ExportFormatType.Excel;
+                    crformat = ExportFormatType.ExcelRecord;
                     break;
                 case "5":
                     Trace.WriteLine("Output Format: Portable Document Format");
