@@ -48,16 +48,17 @@ namespace RptDynamo
         {
             if (!String.IsNullOrEmpty(apiUri))
             {
-                using (var client = new HttpClient())
+                using (var client = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true }))
                 {
                     //Setup Variables for HTTP API Request
-                    client.BaseAddress = new Uri(apiUri);
+                    Uri uri = new Uri(apiUri);
+                    client.BaseAddress = uri;
                     client.DefaultRequestHeaders.Accept.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     HttpResponseMessage response;
 
                     //Get Status Data
-                    response = await client.GetAsync("/status/" + ID);
+                    response = await client.GetAsync(uri.AbsoluteUri + uri.Query + "/status/" + ID);
                     if (response.IsSuccessStatusCode)
                     {
                         status = await response.Content.ReadAsAsync<JobStatus>();
@@ -69,7 +70,7 @@ namespace RptDynamo
                     status.processID = Process.GetCurrentProcess().Id;
 
                     //Post Status Processing
-                    response = await client.PostAsJsonAsync("/status", status);
+                    response = await client.PostAsJsonAsync(uri.AbsoluteUri + uri.Query + "/status", status);
                 }
             }
         }
@@ -77,10 +78,11 @@ namespace RptDynamo
         {
             if (!String.IsNullOrEmpty(apiUri))
             {
-                using (var client = new HttpClient())
+                using (var client = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true }))
                 {
                     //Setup Variables for HTTP API Request
-                    client.BaseAddress = new Uri(apiUri);
+                    Uri uri = new Uri(apiUri);
+                    client.BaseAddress = uri;
                     client.DefaultRequestHeaders.Accept.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     HttpResponseMessage response;
@@ -89,7 +91,7 @@ namespace RptDynamo
                     status.status = Status.Completed;
                     status.processID = 0;
 
-                    response = await client.PostAsJsonAsync("/status", status);
+                    response = await client.PostAsJsonAsync(uri.AbsoluteUri + uri.Query + "/status", status);
                 }
             }
         }
@@ -97,10 +99,11 @@ namespace RptDynamo
         {
             if (!String.IsNullOrEmpty(apiUri))
             {
-                using (var client = new HttpClient())
+                using (var client = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true }))
                 {
                     //Setup Variables for HTTP API Request
-                    client.BaseAddress = new Uri(apiUri);
+                    Uri uri = new Uri(apiUri);
+                    client.BaseAddress = uri;
                     client.DefaultRequestHeaders.Accept.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -108,7 +111,7 @@ namespace RptDynamo
                     status.status = Status.Failed;
                     status.processID = 0;
 
-                    HttpResponseMessage response = await client.PostAsJsonAsync("/status", status);
+                    HttpResponseMessage response = await client.PostAsJsonAsync(uri.AbsoluteUri + uri.Query + "/status", status);
                 }
             }
         }
