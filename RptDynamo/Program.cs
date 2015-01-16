@@ -180,6 +180,17 @@ namespace RptDynamo
                 email.body.AppendLine("\r\n Please contact system administrator");
                 email.body.AppendLine(e.Message);
             }
+            catch (System.Runtime.InteropServices.COMException e)
+            {
+                sAPI.failed().Wait();
+                email.body.AppendLine("<br/><br/><font color=\"red\"><strong>Crystal Reports Error:</strong> " + e.Message + "</font>");
+                email.body.AppendLine("\r\n Please contact system administrator");
+                email.body.AppendLine(e.Message);
+            }
+            catch
+            {
+                sAPI.failed().Wait();
+            }
 
             // Clean up Crystal Reports ReportDocument
             rpt.Close();
