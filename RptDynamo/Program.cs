@@ -107,11 +107,11 @@ namespace RptDynamo
                     rpt.SetParameterValue(rptParam.Name, rptParam.SelectedValues.ToArray());
                     string[] s = rptParam.SelectedValues.ToArray();
                     if (rptJob.email.custom == null)
-                        email.body.AppendLine("Parameter: " + rptParam.Name + " is set to " + rptParam.SelectedValues);
+                        email.body.AppendLine("Parameter: " + rptParam.Name + " is set to " + string.Join(", ", rptParam.SelectedValues));
                     else
                     {
                         if (rptJob.email.custom.supressparameters)
-                            email.body.AppendLine("Parameter: " + rptParam.Name + " is set to " + rptParam.SelectedValues);
+                            email.body.AppendLine("Parameter: " + rptParam.Name + " is set to " + string.Join(", ", rptParam.SelectedValues));
                     }
                 }
             }
