@@ -27,5 +27,6 @@ namespace RptDynamo
     {
         public Smtp smtp { get; set; }
         public Queue queue { get; set; }
+        public String apiUri { get; set; }
     }
 }
