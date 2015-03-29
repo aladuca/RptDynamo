@@ -188,20 +188,23 @@ namespace RptDynamo
             catch (CrystalDecisions.CrystalReports.Engine.ParameterFieldCurrentValueException e)
             {
                 sAPI.failed().Wait();
+                Trace.WriteLine("Crystal Reports Error: " + e.Message);
                 email.body.AppendLine("<br/><br/><font color=\"red\"><strong>Crystal Reports Error:</strong> " + e.Message + "</font>");
                 email.body.AppendLine("\r\n Please contact system administrator");
-                email.body.AppendLine(e.Message);
             }
             catch (System.Runtime.InteropServices.COMException e)
             {
                 sAPI.failed().Wait();
+                Trace.WriteLine("Crystal Reports Error: " + e.Message);
                 email.body.AppendLine("<br/><br/><font color=\"red\"><strong>Crystal Reports Error:</strong> " + e.Message + "</font>");
                 email.body.AppendLine("\r\n Please contact system administrator");
-                email.body.AppendLine(e.Message);
             }
             catch
             {
                 sAPI.failed().Wait();
+                Trace.WriteLine("ExportToDisk: Unknown Error ");
+                email.body.AppendLine("<br/><br/><font color=\"red\"><strong>Unknown Error</strong></font>");
+                email.body.AppendLine("\r\n Please contact system administrator");
             }
 
             // Clean up Crystal Reports ReportDocument
