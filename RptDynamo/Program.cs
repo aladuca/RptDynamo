@@ -103,9 +103,9 @@ namespace RptDynamo
                 Trace.WriteLine("Passing Parameters");
                 foreach (Parameters rptParam in rptJob.report.Parameters)
                 {
-                    Trace.WriteLine("Parameter: " + rptParam.Name + " is set to " + rptParam.SelectedValues.ToArray());
-                    rpt.SetParameterValue(rptParam.Name, rptParam.SelectedValues.ToArray());
-                    string[] s = rptParam.SelectedValues.ToArray();
+                    Trace.WriteLine("Parameter: " + rptParam.Name + " is set to " + string.Join(", ", rptParam.SelectedValues));
+                    try { rpt.SetParameterValue(rptParam.Name, rptParam.SelectedValues.ToArray()); }
+                    catch { Trace.WriteLine("Failed to set " + rptParam.Name); }
                     if (rptJob.email.custom == null)
                         email.body.AppendLine("Parameter: " + rptParam.Name + " is set to " + string.Join(", ", rptParam.SelectedValues));
                     else
