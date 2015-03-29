@@ -124,34 +124,43 @@ namespace RptDynamo
             Console.WriteLine("Created tmpdir " + tempdir);
 
             // Determine File Format and Output name
-            string outfile = null;
-            ExportFormatType crformat = ExportFormatType.NoFormat;
+            ExportOptions CrExportOptions = rpt.ExportOptions;
+            DiskFileDestinationOptions CrDiskFileDestinationOptions = new DiskFileDestinationOptions();
             switch (rptJob.report.SelectedOutput)
             {
+                case "9":
+                    Trace.WriteLine("Output Format: Text");
+                    CrDiskFileDestinationOptions.DiskFileName = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".txt");
+                    CrExportOptions.ExportFormatType = ExportFormatType.Text;
+
+                    TextFormatOptions CrFormatTypeOptions = new TextFormatOptions();
+                    CrFormatTypeOptions.LinesPerPage = 0;
+                    CrExportOptions.ExportFormatOptions = CrFormatTypeOptions;
+                    break;
                 case "4":
                     Trace.WriteLine("Output Format: Excel Workbook (pre 2010)");
-                    outfile = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".xls");
-                    crformat = ExportFormatType.Excel;
+                    CrDiskFileDestinationOptions.DiskFileName = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".xls");
+                    CrExportOptions.ExportFormatType = ExportFormatType.Excel;
                     break;
                 case "8":
                     Trace.WriteLine("Output Format: Excel Workbook (pre 2010)");
-                    outfile = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".xls");
-                    crformat = ExportFormatType.ExcelRecord;
+                    CrDiskFileDestinationOptions.DiskFileName = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".xls");
+                    CrExportOptions.ExportFormatType = ExportFormatType.ExcelRecord;
                     break;
                 case "5":
                     Trace.WriteLine("Output Format: Portable Document Format");
-                    outfile = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".pdf");
-                    crformat = ExportFormatType.PortableDocFormat;
+                    CrDiskFileDestinationOptions.DiskFileName = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".pdf");
+                    CrExportOptions.ExportFormatType = ExportFormatType.PortableDocFormat;
                     break;
                 case "10":
                     Trace.WriteLine("Output Format: Comma-Seperated Values");
-                    outfile = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".csv");
-                    crformat = ExportFormatType.CharacterSeparatedValues;
+                    CrDiskFileDestinationOptions.DiskFileName = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".csv");
+                    CrExportOptions.ExportFormatType = ExportFormatType.CharacterSeparatedValues;
                     break;
                 case "15":
                     Trace.WriteLine("Output Format: Excel Workbook (2010+)");
-                    outfile = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".xlsx");
-                    crformat = ExportFormatType.ExcelWorkbook;
+                    CrDiskFileDestinationOptions.DiskFileName = tempdir + Path.ChangeExtension(Path.GetFileName(rptJob.report.Filename), ".xlsx");
+                    CrExportOptions.ExportFormatType = ExportFormatType.ExcelWorkbook;
                     break;
             }
 
@@ -159,14 +168,17 @@ namespace RptDynamo
             Trace.WriteLine("Exporting Report");
             try
             {
-                rpt.ExportToDisk(crformat, outfile);
-                email.file = outfile;
+                CrExportOptions.ExportDestinationType = ExportDestinationType.DiskFile;
+                CrExportOptions.DestinationOptions = CrDiskFileDestinationOptions;
+                rpt.Export();
+
+                email.file = CrDiskFileDestinationOptions.DiskFileName;
                 sAPI.completed().Wait();
             }
             catch (InternalException e)
             {
                 sAPI.failed().Wait();
-                Trace.WriteLine(e.Message);
+                Trace.WriteLine("Error: " + e.Message);
                 email.subject = "[RptDynamo] Error " + Path.GetFileNameWithoutExtension(rptJob.report.Filename);
                 email.body.AppendLine("Error loading: " + rptJob.report.Filename);
                 email.body.AppendLine("\r\n Please contact system administrator");
