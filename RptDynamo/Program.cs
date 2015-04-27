@@ -248,9 +248,12 @@ namespace RptDynamo
             mm.Subject = email.subject;
             mm.Body = email.body.Replace(Environment.NewLine, Environment.NewLine + "<br/>").ToString();
             mm.IsBodyHtml = true;
+
             if (email.file != null) mm.Attachments.Add(new Attachment(email.file));
 
             transport.Send(mm);
+
+            sAPI.completed().Wait();
 
             mm.Dispose();
             transport.Dispose();
