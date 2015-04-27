@@ -224,7 +224,7 @@ namespace RptDynamo
             { transport.Credentials = new NetworkCredential(config.smtp.username, config.smtp.password); }
             transport.EnableSsl = config.smtp.ssl;
 
-            mm.From = new MailAddress(config.smtp.username);
+            mm.From = new MailAddress(config.smtp.sender);
             if (rptJob.email.to != null)
             {
                 rptJob.email.to.ForEach(delegate(String name)
