@@ -173,14 +173,14 @@ namespace RptDynamo
                 rpt.Export();
 
                 email.file = CrDiskFileDestinationOptions.DiskFileName;
-                sAPI.completed().Wait();
             }
-            catch (InternalException e)
+            catch (CrystalDecisions.CrystalReports.Engine.InternalException e)
             {
                 sAPI.failed().Wait();
                 Trace.WriteLine("Error: " + e.Message);
                 email.subject = "[RptDynamo] Error " + Path.GetFileNameWithoutExtension(rptJob.report.Filename);
                 email.body.AppendLine("Error loading: " + rptJob.report.Filename);
+                email.body.AppendLine(e.ToString());
                 email.body.AppendLine("\r\n Please contact system administrator");
                 email.body.AppendLine(e.Message);
 
@@ -190,13 +190,15 @@ namespace RptDynamo
                 sAPI.failed().Wait();
                 Trace.WriteLine("Crystal Reports Error: " + e.Message);
                 email.body.AppendLine("<br/><br/><font color=\"red\"><strong>Crystal Reports Error:</strong> " + e.Message + "</font>");
+                email.body.AppendLine(e.ToString());
                 email.body.AppendLine("\r\n Please contact system administrator");
             }
             catch (System.Runtime.InteropServices.COMException e)
             {
                 sAPI.failed().Wait();
-                Trace.WriteLine("Crystal Reports Error: " + e.Message);
+                Trace.WriteLine("COM Error: " + e.Message);
                 email.body.AppendLine("<br/><br/><font color=\"red\"><strong>Crystal Reports Error:</strong> " + e.Message + "</font>");
+                email.body.AppendLine(e.ToString());
                 email.body.AppendLine("\r\n Please contact system administrator");
             }
             catch
