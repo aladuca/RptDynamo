@@ -61,7 +61,8 @@ namespace RptDynamo
                     response = await client.GetAsync(uri.AbsoluteUri + uri.Query + "/status/" + ID);
                     if (response.IsSuccessStatusCode)
                     {
-                        status = await response.Content.ReadAsAsync<JobStatus>();
+                        String responseString = await response.Content.ReadAsStringAsync();
+                        status = Newtonsoft.Json.JsonConvert.DeserializeObject<JobStatus>(responseString);
                     }
 
                     status.start = DateTime.Now;
@@ -70,7 +71,8 @@ namespace RptDynamo
                     status.processID = Process.GetCurrentProcess().Id;
 
                     //Post Status Processing
-                    response = await client.PostAsJsonAsync(uri.AbsoluteUri + uri.Query + "/status", status);
+                    StringContent content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(status), Encoding.UTF8, "application/json");
+                    response = await client.PostAsync(uri.AbsoluteUri + uri.Query + "/status", content);
                 }
             }
         }
@@ -91,7 +93,8 @@ namespace RptDynamo
                     status.status = Status.Completed;
                     status.processID = 0;
 
-                    response = await client.PostAsJsonAsync(uri.AbsoluteUri + uri.Query + "/status", status);
+                    StringContent content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(status), Encoding.UTF8, "application/json");
+                    response = await client.PostAsync(uri.AbsoluteUri + uri.Query + "/status", content);
                 }
             }
         }
@@ -111,7 +114,8 @@ namespace RptDynamo
                     status.status = Status.Failed;
                     status.processID = 0;
 
-                    HttpResponseMessage response = await client.PostAsJsonAsync(uri.AbsoluteUri + uri.Query + "/status", status);
+                    StringContent content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(status), Encoding.UTF8, "application/json");
+                    HttpResponseMessage response = await client.PostAsync(uri.AbsoluteUri + uri.Query + "/status", content);
                 }
             }
         }
