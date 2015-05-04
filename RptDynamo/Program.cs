@@ -10,6 +10,14 @@ using System.Runtime.Serialization.Json;
 using System.Net.Mail;
 using System.Net;
 
+using OpenStack;
+using OpenStack.Identity;
+using OpenStack.Storage;
+
+using net.openstack.Core.Domain;
+using net.openstack.Core.Providers;
+using net.openstack.Providers.Rackspace;
+
 using CommandLine;
 using CommandLine.Text;
 
@@ -248,10 +256,52 @@ namespace RptDynamo
             }
             else { Trace.WriteLine("No mail \"cc\" addresses specified"); }
             mm.Subject = email.subject;
+
+            if (email.file != null)
+            {
+                email.body.AppendLine();
+                if (config.swiftCfg != null)
+                {
+                    Trace.WriteLine("Getting OpenStack Crudential");
+                    // Using openstack.net @ https://github.com/openstacknetsdk/openstack.net
+                    var ident = new OpenStackIdentityProvider(config.swiftCfg.authUri, new CloudIdentityWithProject()
+                    {
+                        Username = config.swiftCfg.userName,
+                        Password = config.swiftCfg.password,
+                        ProjectName = "",
+                        ProjectId = new ProjectId(config.swiftCfg.tenantId)
+                    });
+                    var cli = new CloudFilesProvider(null, ident);
+                    Trace.WriteLine("Uploading Object");
+                    var headers = new Dictionary<string, string>();
+                    headers.Add("X-Delete-After", "1209600");
+                    //headers.Add("X-Object-Meta-RptRequester", "")
+                    cli.CreateObjectFromFile(config.swiftCfg.swiftContainer, email.file, rptJob.JobID + Path.GetExtension(email.file), null, 4096, headers, config.swiftCfg.region);
+
+                    Trace.WriteLine("Get URL for Email");
+                    //Using openstack-sdk-dotnet @ https://github.com/stackforge/openstack-sdk-dotnet
+                    var credential = new OpenStackCredential(config.swiftCfg.authUri, config.swiftCfg.userName, config.swiftCfg.password, config.swiftCfg.tenantName, config.swiftCfg.region);
+                    var client = OpenStackClientFactory.CreateClient(credential);
+                    client.Connect().Wait();
+                    var swiftPublicEndpoint = credential.ServiceCatalog.GetPublicEndpoint("swift", config.swiftCfg.region);
+                    var swifturi = swiftPublicEndpoint + "/" + config.swiftCfg.swiftContainer + "/" + rptJob.JobID + Path.GetExtension(email.file);
+
+                    email.body.AppendLine("<a href=\"" + swifturi + "\">View Report</a>");
+                }
+                else
+                {
+                    var fileInfo = new FileInfo(email.file);
+                    if (fileInfo.Length < 26214400) { mm.Attachments.Add(new Attachment(email.file)); }
+                    else
+                    {
+                        email.body.AppendLine("<br/><br/><font color=\"red\"><strong>Report export too large to be attached.</strong></font>");
+                        File.Copy(email.file, "C:\\Users\\Public\\Documents\\RptPutty-RptDynamo\\Exports\\" + rptJob.JobID + Path.GetExtension(email.file));
+                    }
+                }
+            }
+
             mm.Body = email.body.Replace(Environment.NewLine, Environment.NewLine + "<br/>").ToString();
             mm.IsBodyHtml = true;
-
-            if (email.file != null) mm.Attachments.Add(new Attachment(email.file));
 
             transport.Send(mm);
 

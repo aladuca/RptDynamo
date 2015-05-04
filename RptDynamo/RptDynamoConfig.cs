@@ -23,10 +23,22 @@ namespace RptDynamo
         public string name { get; set; }
     }
 
+    public class OSSwift
+    {
+        public Uri authUri { get; set; }
+        public string userName { get; set; }
+        public string password { get; set; }
+        public string tenantName { get; set; }
+        public string tenantId { get; set; }
+        public string region { get; set; }
+        public string swiftContainer { get; set; }
+    }
+
     public class RptDynamoConfig
     {
         public Smtp smtp { get; set; }
         public Queue queue { get; set; }
         public String apiUri { get; set; }
+        public OSSwift swiftCfg { get; set; }
     }
 }
