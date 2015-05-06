@@ -56,11 +56,16 @@ namespace RptDynamo
                 serializer = new DataContractJsonSerializer(typeof(RptJob));
                 RptJob job = (RptJob)serializer.ReadObject(File.OpenRead(options.job));
 
+                var tempPath = Environment.GetEnvironmentVariable("TEMP") + "//RptDynamo_" + Path.GetFileNameWithoutExtension(options.job);
+                Directory.CreateDirectory(tempPath);
+                Environment.SetEnvironmentVariable("TEMP", tempPath);
+                Environment.SetEnvironmentVariable("TMP", tempPath);
+
                 RptStatusAPI sAPI = new RptStatusAPI(config.apiUri);
                 sAPI.processing(Guid.Parse(Path.GetFileNameWithoutExtension(options.job))).Wait();
                 RptEmail email = ProcessRpt(job, sAPI);
                 SentRpt(config, job, email, sAPI);
-
+                Directory.Delete(tempPath, true);
             }
         }
         static RptEmail ProcessRpt(RptJob rptJob, RptStatusAPI sAPI)
@@ -126,7 +131,7 @@ namespace RptDynamo
             else { Trace.WriteLine("No Parameters Passed"); }
 
             Trace.WriteLine("Creating temporary output directory");
-            string tempdir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            string tempdir = Path.Combine(Path.GetTempPath(), "export");
             Directory.CreateDirectory(tempdir);
             tempdir += "\\";
             Console.WriteLine("Created tmpdir " + tempdir);
@@ -275,7 +280,9 @@ namespace RptDynamo
                     Trace.WriteLine("Uploading Object");
                     var headers = new Dictionary<string, string>();
                     headers.Add("X-Delete-After", "1209600");
-                    //headers.Add("X-Object-Meta-RptRequester", "")
+                    headers.Add("X-Object-Meta-Rpt-Filename", rptJob.report.Filename);
+                    headers.Add("X-Object-Meta-Rpt-Email-TO", string.Join(", ", rptJob.email.to));
+                    headers.Add("X-Object-Meta-Rpt-Email-CC", string.Join(", ", rptJob.email.cc));
                     cli.CreateObjectFromFile(config.swiftCfg.swiftContainer, email.file, rptJob.JobID + Path.GetExtension(email.file), null, 4096, headers, config.swiftCfg.region);
 
                     Trace.WriteLine("Get URL for Email");
