@@ -24,6 +24,7 @@ namespace RptDynamo
     public class Report
     {
         public string Filename { get; set; }
+        public string Title { get; set; }
         public List<Parameters> Parameters { get; set; }
         public Database database { get; set; }
         public string SelectedOutput { get; set; }
