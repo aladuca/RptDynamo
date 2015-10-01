@@ -15,13 +15,13 @@ namespace RptDynamo
     public class JobStatus
     {
         public Guid ID { get; set; }
-        public Status status { get; set; }
-        public DateTime start { get; set; }
-        public DateTime end { get; set; }
-        public String filename { get; set; }
-        public String requestor { get; set; }
-        public String worker { get; set; }
-        public Int32 processID { get; set; }
+        public int STATUS_C { get; set; }
+        public Nullable<DateTime> PROCESS_START { get; set; }
+        public Nullable<DateTime> PROCESS_END { get; set; }
+        public String FILENAME { get; set; }
+        public String REQUESTOR { get; set; }
+        public String WORKER { get; set; }
+        public Nullable<Int32> PROCESS_ID { get; set; }
     }
     public enum Status
     {
@@ -65,10 +65,10 @@ namespace RptDynamo
                         status = Newtonsoft.Json.JsonConvert.DeserializeObject<JobStatus>(responseString);
                     }
 
-                    status.start = DateTime.Now;
-                    status.status = Status.Processing;
-                    status.worker = GetLocalhostFqdn().ToUpper();
-                    status.processID = Process.GetCurrentProcess().Id;
+                    status.PROCESS_START = DateTime.Now;
+                    status.STATUS_C = 1; //Status.Processing;
+                    status.WORKER = GetLocalhostFqdn().ToUpper();
+                    status.PROCESS_ID = Process.GetCurrentProcess().Id;
 
                     //Post Status Processing
                     StringContent content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(status), Encoding.UTF8, "application/json");
@@ -89,9 +89,9 @@ namespace RptDynamo
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     HttpResponseMessage response;
 
-                    status.end = DateTime.Now;
-                    status.status = Status.Completed;
-                    status.processID = 0;
+                    status.PROCESS_END = DateTime.Now;
+                    status.STATUS_C = 2; //Status.Completed;
+                    status.PROCESS_ID = null;
 
                     StringContent content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(status), Encoding.UTF8, "application/json");
                     response = await client.PostAsync(uri.AbsoluteUri + uri.Query + "/status", content);
@@ -110,9 +110,9 @@ namespace RptDynamo
                     client.DefaultRequestHeaders.Accept.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                    status.end = DateTime.Now;
-                    status.status = Status.Failed;
-                    status.processID = 0;
+                    status.PROCESS_END = DateTime.Now;
+                    status.STATUS_C = 3; //Status.Failed;
+                    status.PROCESS_ID = null;
 
                     StringContent content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(status), Encoding.UTF8, "application/json");
                     HttpResponseMessage response = await client.PostAsync(uri.AbsoluteUri + uri.Query + "/status", content);
