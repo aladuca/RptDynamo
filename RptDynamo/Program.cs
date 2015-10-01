@@ -149,28 +149,30 @@ namespace RptDynamo
                 }
             }
 
-            string swiftaHRef = UploadRpt(rptExport, swiftCfg, rptJob);
-            if (String.IsNullOrEmpty(swiftaHRef) && !String.IsNullOrEmpty(rptExport) && File.Exists(rptExport))
+            if (!String.IsNullOrEmpty(rptExport) && File.Exists(rptExport))
             {
-                var fileInfo = new FileInfo(email.file);
-                if (fileInfo.Length < 26214400)
+                if (swiftCfg == null)
                 {
-                    mailMessage.Attachments.Add(new Attachment(email.file));
-                    sAPI.completed().Wait();
+                    var fileInfo = new FileInfo(rptExport);
+                    if (fileInfo.Length < 26214400)
+                    {
+                        mailMessage.Attachments.Add(new Attachment(rptExport));
+                        sAPI.completed().Wait();
+                    }
+                    else
+                    {
+                        sAPI.failed().Wait();
+                        email.body.AppendLine("<br/><br/><font color=\"red\"><strong>Report export too large to be attached.</strong></font>");
+                        File.Copy(email.file, "C:\\Users\\Public\\Documents\\RptPutty-RptDynamo\\Exports\\" + rptJob.JobID + Path.GetExtension(email.file));
+                    }
                 }
                 else
                 {
-                    sAPI.failed().Wait();
-                    email.body.AppendLine("<br/><br/><font color=\"red\"><strong>Report export too large to be attached.</strong></font>");
-                    File.Copy(email.file, "C:\\Users\\Public\\Documents\\RptPutty-RptDynamo\\Exports\\" + rptJob.JobID + Path.GetExtension(email.file));
+                    string swiftaHRef = UploadRpt(rptExport, swiftCfg, rptJob);
+                    eMailBody.AppendLine(swiftaHRef);
+                    sAPI.completed().Wait();
                 }
             }
-            else if (!String.IsNullOrEmpty(swiftaHRef))
-            {
-                eMailBody.AppendLine(swiftaHRef);
-                sAPI.completed().Wait();
-            }
-
             // Subject Handling (Preserves Custom Subject)
             if (String.IsNullOrEmpty(mailMessage.Subject))
             {
@@ -202,6 +204,7 @@ namespace RptDynamo
                 Trace.WriteLine("Uploading Object");
                 var headers = new Dictionary<string, string>();
                 headers.Add("X-Delete-After", "1209600");
+                headers.Add("X-Object-Meta-Rpt-Job", rptRqst.JobID.ToString());
                 headers.Add("X-Object-Meta-Rpt-Filename", rptRqst.report.Filename);
                 headers.Add("X-Object-Meta-Rpt-Email-TO", string.Join(", ", rptRqst.email.to));
                 headers.Add("X-Object-Meta-Rpt-Email-CC", string.Join(", ", rptRqst.email.cc));
